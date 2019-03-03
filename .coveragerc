@@ -1,0 +1,7 @@
+[run]
+branch = True
+
+[paths]
+sqlalchemy_postgresql_audit =
+    src/sqlalchemy_postgresql_audit/
+    .tox/**/sqlalchemy_postgresql_audit/

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+pip-compile -o deps/requirements.txt deps/requirements.in
+pip-compile -o deps/testing-requirements.txt deps/testing-requirements.in deps/requirements.txt
+pip-compile -o deps/docs-requirements.txt deps/docs-requirements.in deps/requirements.txt
+pip-compile -o deps/linting-requirements.txt deps/linting-requirements.in deps/requirements.txt
