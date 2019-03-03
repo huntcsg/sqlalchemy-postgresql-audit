@@ -1,0 +1,2 @@
+recursive-include deps *.txt
+recursive-include deps *.in

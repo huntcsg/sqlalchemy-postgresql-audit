@@ -1,0 +1,150 @@
+version: 2
+
+test-tox-env: &test-tox-env
+  run:
+    name: Run Tests
+    command: |
+      pip install tox
+      tox
+
+setup-env: &setup-env
+  run:
+    name: Setup Environment
+    command: |
+      echo "Not doing anything"
+
+jobs:
+
+  python-3.4-test:
+    docker:
+      - image: python:3.4.8
+      - image: postgres:9.6.12-alpine
+    environment:
+      - TOXENV=py34
+    steps:
+      - checkout
+      - <<: *setup-env
+      - attach_workspace:
+          at: tmp
+      - <<: *test-tox-env
+      - persist_to_workspace:
+          root: tmp
+          paths:
+            - .coverage.py34
+
+  python-3.5-test:
+    docker:
+      - image: python:3.5.5
+      - image: postgres:9.6.12-alpine
+    environment:
+      - TOXENV=py35
+    steps:
+      - checkout
+      - <<: *setup-env
+      - attach_workspace:
+          at: tmp
+      - <<: *test-tox-env
+      - persist_to_workspace:
+          root: tmp
+          paths:
+            - .coverage.py35
+
+  python-3.6-test:
+    docker:
+      - image: python:3.6.5
+      - image: postgres:9.6.12-alpine
+    environment:
+      - TOXENV=py36
+    steps:
+      - checkout
+      - <<: *setup-env
+      - attach_workspace:
+          at: tmp
+      - <<: *test-tox-env
+      - persist_to_workspace:
+          root: tmp
+          paths:
+            - .coverage.py36
+
+  python-3.7-test:
+    docker:
+      - image: python:3.7.0
+      - image: postgres:9.6.12-alpine
+    environment:
+      - TOXENV=py37
+    steps:
+      - checkout
+      - <<: *setup-env
+      - attach_workspace:
+          at: tmp
+      - <<: *test-tox-env
+      - persist_to_workspace:
+          root: tmp
+          paths:
+            - .coverage.py37
+
+  coverage:
+    docker:
+      - image: python:3.6.5
+    steps:
+      - checkout
+      - <<: *setup-env
+      - attach_workspace:
+          at: tmp
+      - run:
+          command: |
+            pip install tox
+            tox -e coverage
+      - run:
+          command: |
+            pip install codecov
+            codecov --file tmp/coverage.xml
+      - store_artifacts:
+          path: tmp
+
+  lint:
+    docker:
+      - image: python:3.6.5
+    steps:
+      - checkout
+      - run:
+          command: |
+            pip install tox
+            tox -e lint
+
+  pypi:
+    docker:
+      - image: python:3.6.5
+    steps:
+      - checkout
+      - run:
+          command: |
+            pip install wheel twine
+            ./bin/build
+            ./bin/release-pypi
+      - store_artifacts:
+          path: dist
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - python-3.4-test
+      - python-3.5-test
+      - python-3.6-test
+      - python-3.7-test
+      - coverage:
+          requires:
+            - python-3.4-test
+            - python-3.5-test
+            - python-3.6-test
+            - python-3.7-test
+      - lint
+      - pypi:
+          requires:
+            - lint
+            - coverage
+          filters:
+            branches:
+              only:
+                - /^master$/
