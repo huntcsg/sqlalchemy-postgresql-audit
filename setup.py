@@ -51,4 +51,9 @@ setup(
         'docs': parse_requirements('deps/docs-requirements.in'),
         'linting': parse_requirements('deps/linting-requirements.in'),
     },
+    entry_points={
+        'sqlalchemy.plugins': [
+            'audit = sqlalchemy_postgresql_audit.plugin:AuditPlugin'
+        ]
+    },
 )

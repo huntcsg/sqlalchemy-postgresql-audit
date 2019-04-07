@@ -1,23 +1,19 @@
 from sqlalchemy import Column, DateTime, String, Table
 from sqlalchemy.events import event
-from sqlalchemy_postgresql_audit import (
-    DEFAULT_AUDIT_TABLE_FUNCTION_NAMING_CONVENTION,
-    DEFAULT_AUDIT_TABLE_NAMING_CONVENTION,
-    DEFAULT_AUDIT_TABLE_TRIGGER_CONVENTION,
+
+from sqlalchemy_postgresql_audit.ddl import (
     get_audit_spec,
     get_create_trigger_ddl,
     get_drop_trigger_ddl,
 )
+from sqlalchemy_postgresql_audit.dialect import (
+    DEFAULT_AUDIT_TABLE_FUNCTION_NAMING_CONVENTION,
+    DEFAULT_AUDIT_TABLE_NAMING_CONVENTION,
+    DEFAULT_AUDIT_TABLE_TRIGGER_CONVENTION,
+)
 
 
-def install():
-    event.listens_for(Table, "after_parent_attach")(create_audit_table)
-
-
-def uninstall():
-    event.remove(Table, "after_parent_attach", create_audit_table)
-
-
+@event.listens_for(Table, "after_parent_attach")
 def create_audit_table(target, parent):
     audit_spec = get_audit_spec(target)
 
@@ -56,6 +52,8 @@ def create_audit_table(target, parent):
         Column(col.name, col.type, nullable=True) for col in target.columns.values()
     ]
     session_setting_columns = [col.copy() for col in audit_spec["session_settings"]]
+    for col in session_setting_columns:
+        col.name = "audit_{}".format(col.name)
 
     column_elements = session_setting_columns + columns
 
@@ -69,6 +67,8 @@ def create_audit_table(target, parent):
     )
 
     audit_table.info["audit.create_ddl"] = get_create_trigger_ddl(
+        target.columns,
+        audit_table.columns,
         audit_function_name,
         audit_trigger_name,
         target.fullname,

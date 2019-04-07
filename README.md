@@ -22,6 +22,8 @@ In order to enrich the change data with relevant metadata (such as an applicatio
 pip install sqlalchemy-postgresql-audit
 ```
 
+This is only known to be compatible with the `postgresql+psycopg2` dialect.
+
 ## Usage
 
 This package "claims" keys in `info` at 'audit.*'. 
@@ -30,13 +32,13 @@ In order for your table definitions to be ready, you must indicate in the info d
 
 ```python
 from sqlalchemy import MetaData, Table, Column, String
-import sqlalchemy_postgresql_audit.event_listeners
+import sqlalchemy_postgresql_audit.event_listeners.sqlalchemy
 
 
 meta = MetaData()
 
 # You must install the event listeners prior to associating any tables with the metadata object.
-sqlalchemy_postgresql_audit.event_listeners.install()
+sqlalchemy_postgresql_audit.event_listeners.sqlalchemy.install()
 
 foo = Table(
         "foo",
@@ -130,4 +132,27 @@ CREATE TABLE public.foo_audr (
 )
 ```
 
+## Include as a SQLAlchemy plugin
 
+You can include this as a plugin at the `audit` name
+
+### Via the connection string
+
+```python
+from sqlalchemy import create_engine
+
+engine = create_engine("postgresql+psycopg2://user:password@host:port/dbname?plugin=audit")
+```
+### Via the create_engine option
+
+```python
+from sqlalchemy import create_engine
+
+engine = create_engine("postgresql+psycopg2://user:password@host:port/dbname", plugins=['audit'])
+```
+
+
+
+## Alembic Integration
+
+This library is partially integrated with alembic. Some aspects are not perfect (downgrades drop the triggers and function and don't replace them)
