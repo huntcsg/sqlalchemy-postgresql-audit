@@ -46,7 +46,8 @@ def get_create_trigger_ddl(
             updation_elements.append("NEW.{}".format(col.name))
             insertion_elements.append("NEW.{}".format(col.name))
 
-        # If it is not, it is either a default "audit_*" column or it is one of our session settings values
+        # If it is not, it is either a default "audit_*" column
+        # or it is one of our session settings values
         else:
             if col.name in ("audit_operation", "audit_operation_timestamp"):
                 continue
@@ -67,8 +68,9 @@ def get_create_trigger_ddl(
             # and then the procedure will succeed, despite the value being "empty".
             if not session_setting.nullable:
                 check_settings.append(
-                    "IF {}::VARCHAR = '' THEN RAISE EXCEPTION 'audit.{} session setting must be set to a non null/empty value'; END IF;"
-                    "".format(session_settings_element, name)
+                    "IF {}::VARCHAR = '' THEN RAISE EXCEPTION "
+                    "'audit.{} session setting must be set to a non null/empty value'; "
+                    "END IF;".format(session_settings_element, name)
                 )
 
     return make_audit_procedure(

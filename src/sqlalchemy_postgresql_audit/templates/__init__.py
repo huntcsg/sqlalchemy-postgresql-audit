@@ -5,7 +5,7 @@ PROCEDURE_TEMPLATE = textwrap.dedent(
     CREATE OR REPLACE FUNCTION {audit_function_name}() RETURNS TRIGGER AS ${trigger_name}$
     BEGIN
         {check_settings}
-    
+
         IF (TG_OP = 'DELETE') THEN
             INSERT INTO {audit_table_full_name} ({audit_columns}) SELECT {deletion_elements};
         ELSIF (TG_OP = 'UPDATE') THEN

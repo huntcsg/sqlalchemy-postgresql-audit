@@ -42,7 +42,9 @@ try:
                 modify_table_ops.ops.append(
                     ReversableExecute(
                         sqltext=metadata_table.info["audit.create_ddl"],
-                        reverse_ddl=metadata_table.info["audit.drop_ddl"]  # TODO: Use reflected DDL from the database
+                        reverse_ddl=metadata_table.info[
+                            "audit.drop_ddl"
+                        ],  # TODO: Use reflected DDL from the database
                     )
                 )
 
@@ -56,14 +58,17 @@ try:
                 )
 
                 # Case when the audit table has new columns.
-                # TODO: Check if the settings types have changed. Not 100% sure how this would be done.
+                # TODO: Check if the settings types have changed.
+                #  Not 100% sure how this would be done.
                 if existing_audit_table_columns.symmetric_difference(
                     defined_audit_table_columns
                 ):
                     modify_table_ops.ops.append(
                         ReversableExecute(
                             sqltext=str(metadata_table.info["audit.create_ddl"]),
-                            reverse_ddl=metadata_table.info["audit.drop_ddl"]  # TODO: Use reflected DDL from the database
+                            reverse_ddl=metadata_table.info[
+                                "audit.drop_ddl"
+                            ],  # TODO: Use reflected DDL from the database
                         )
                     )
 
