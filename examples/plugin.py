@@ -3,9 +3,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.engine.url import URL
 from sqlalchemy.util import immutabledict
 
-import sqlalchemy_postgresql_audit.event_listeners.sqlalchemy
 from sqlalchemy_postgresql_audit import install_audit_triggers
-
 
 NAMING_CONVENTIONS = immutabledict(
     {
@@ -19,6 +17,17 @@ NAMING_CONVENTIONS = immutabledict(
 )
 
 meta = MetaData(naming_convention=NAMING_CONVENTIONS)
+url = URL(
+    drivername="postgresql+psycopg2",
+    host="localhost",
+    port=5432,
+    password="postgres",
+    username="postgres",
+)
+engine = create_engine(url, plugins=["audit"])
+engine.echo = True
+meta.bind = engine
+
 
 t = Table(
     "foo",
@@ -48,17 +57,6 @@ r = Table(
 print("Tables: ", meta.tables)
 
 
-url = URL(
-    drivername="postgresql+psycopg2",
-    host="localhost",
-    port=5432,
-    password="postgres",
-    username="postgres",
-)
-
-engine = create_engine(url)
-engine.echo = True
-meta.bind = engine
-
 meta.create_all()
-install_audit_triggers(meta)
+install_ddl = install_audit_triggers(meta)
+# uninstall_ddl = uninstall_audit_triggers(meta)
