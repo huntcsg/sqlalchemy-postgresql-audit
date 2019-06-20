@@ -6,6 +6,8 @@ DEFAULT_AUDIT_TABLE_TRIGGER_CONVENTION = "%(schema)s_%(table_name)s_audit"
 
 
 class PGAdvancedInspector(PGInspector):
-    def reflecttable(self, table, include_columns, **kwargs):
-        super(PGAdvancedInspector, self).reflecttable(table, include_columns, **kwargs)
+    def reflecttable(self, table, include_columns, *args, **kwargs):
+        super(PGAdvancedInspector, self).reflecttable(
+            table, include_columns, *args, **kwargs
+        )
         # TODO: Retrieve trigger/procedure information for the particular table.
