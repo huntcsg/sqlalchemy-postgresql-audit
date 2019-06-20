@@ -32,13 +32,14 @@ In order for your table definitions to be ready, you must indicate in the info d
 
 ```python
 from sqlalchemy import MetaData, Table, Column, String
+
+# Importing this module is sufficient to enable Table event listeners
+# However, in order to utilize alembic you should enable `audit` as a sqlalchemy plugin.
 import sqlalchemy_postgresql_audit.event_listeners.sqlalchemy
 
 
 meta = MetaData()
 
-# You must install the event listeners prior to associating any tables with the metadata object.
-sqlalchemy_postgresql_audit.event_listeners.sqlalchemy.install()
 
 foo = Table(
         "foo",
@@ -150,8 +151,6 @@ from sqlalchemy import create_engine
 
 engine = create_engine("postgresql+psycopg2://user:password@host:port/dbname", plugins=['audit'])
 ```
-
-
 
 ## Alembic Integration
 
