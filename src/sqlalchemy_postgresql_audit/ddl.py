@@ -1,5 +1,3 @@
-import textwrap
-
 from .templates import make_audit_procedure, make_drop_audit_procedure
 
 
@@ -23,11 +21,11 @@ def get_create_trigger_ddl(
 ):
     session_settings = session_settings or []
 
-    deletion_elements = ["'D'", "now()"]
+    deletion_elements = ["'D'", "now()", "current_user"]
 
-    updation_elements = ["'U'", "now()"]
+    updation_elements = ["'U'", "now()", "current_user"]
 
-    insertion_elements = ["'I'", "now()"]
+    insertion_elements = ["'I'", "now()", "current_user"]
 
     setting_map = {
         session_setting.name: session_setting for session_setting in session_settings
@@ -49,7 +47,11 @@ def get_create_trigger_ddl(
         # If it is not, it is either a default "audit_*" column
         # or it is one of our session settings values
         else:
-            if col.name in ("audit_operation", "audit_operation_timestamp"):
+            if col.name in (
+                "audit_operation",
+                "audit_operation_timestamp",
+                "audit_current_user",
+            ):
                 continue
 
             session_setting = setting_map[col.name]
@@ -88,3 +90,52 @@ def get_create_trigger_ddl(
 
 def get_drop_trigger_ddl(function_name, trigger_name, table_full_name):
     return make_drop_audit_procedure(function_name, trigger_name, table_full_name)
+
+
+def install_audit_triggers(metadata, engine=None):
+    """Installs all audit triggers.
+
+    This can be used after calling `metadata.create_all()` to create
+    all the procedures and triggers.
+
+    :param metadata: A :class:`sqlalchemy.sql.schema.MetaData`
+    :param engine: A :class:`sqlalchemy.engine.Engine` or None
+    :return: None or a :class:`str` for the DDL needed to install all audit triggers.
+    """
+    audit_table_ddl = [
+        t.info["audit.create_ddl"]
+        for t in metadata.tables.values()
+        if t.info.get("audit.is_audited")
+    ]
+
+    engine = engine or metadata.bind
+
+    if engine:
+        for ddl in audit_table_ddl:
+            engine.execute(ddl)
+    else:
+        return "; ".join(audit_table_ddl)
+
+
+def uninstall_audit_triggers(metadata, engine=None):
+    """Uninstalls all audit triggers.
+
+    This can be used to remove all audit triggers.
+
+    :param metadata: A :class:`sqlalchemy.sql.schema.MetaData`
+    :param engine: A :class:`sqlalchemy.engine.Engine` or None
+    :return: None or a :class:`str` for the DDL needed to uninstall all audit triggers.
+    """
+    audit_table_ddl = [
+        t.info["audit.drop_ddl"]
+        for t in metadata.tables.values()
+        if t.info.get("audit.is_audited")
+    ]
+
+    engine = engine or metadata.bind
+
+    if engine:
+        for ddl in audit_table_ddl:
+            engine.execute(ddl)
+    else:
+        return ";\n ".join(audit_table_ddl)
