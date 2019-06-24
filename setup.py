@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 
 def parse_requirements(filename):
     with open(filename) as f:
-        lineiter = (line.strip() for line in f)
+        lineiter = (line.split('#')[0].strip() for line in f)
         return [
             line.replace(' \\', '').strip()
             for line in lineiter
@@ -47,6 +47,7 @@ setup(
     python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*',
     install_requires=parse_requirements('deps/requirements.in'),
     extras_require={
+        'dev': parse_requirements('deps/dev-requirements.in'),
         'testing': parse_requirements('deps/testing-requirements.in'),
         'docs': parse_requirements('deps/docs-requirements.in'),
         'linting': parse_requirements('deps/linting-requirements.in'),
