@@ -1,5 +1,10 @@
+"""Defines event listeners for:
+
+    - creating table objects
+    - generating trigger/procedure DDL for audit tables.
+
+"""
 from sqlalchemy import Column, DateTime, String, Table
-from sqlalchemy.events import event
 
 from sqlalchemy_postgresql_audit.ddl import (
     get_audit_spec,
@@ -13,17 +18,47 @@ from sqlalchemy_postgresql_audit.dialect import (
 )
 
 
-@event.listens_for(Table, "after_parent_attach")
 def create_audit_table(target, parent):
+    """Create an audit table and generate procedure/trigger DDL.
+
+    Naming conventions can be defined for a few of the named elements:
+
+        - audit.table: Controls the name of the table
+        - audit.function: Controls the name of the function
+        - audit.trigger: Controls the name of the trigger on the table
+
+    This function creates a new companion table to store row versions.
+
+    Any :class:`sqlalchemy.sql.schema.Column`s specified in `table.info['session_settings']` will
+    be copied and included in the audit table.
+
+    This function will leave a key in the audited table:
+
+        .. code-block:: python
+
+            table.info['audit.is_audited']
+
+    And a key in the audit table:
+
+        .. code-block:: python
+
+            table.info['audit.is_audit_table']
+
+    Additionally you can find the relevant create/drop ddl at the followng keys:
+
+        .. code-block:: python
+
+            table.info['audit.create_ddl']
+            table.info['audit.drop_ddl']
+
+    :param target: The :class:`sqlalchemy.sql.schema.Table` to make an audit table for
+    :param parent: The :class:`sqlalchemy.sql.schema.MetaData` to associate the audit table with.
+    :return: None
+    """
     audit_spec = get_audit_spec(target)
 
     if not audit_spec.get("enabled"):
         return
-
-    if target.schema is None:
-        raise ValueError(
-            "A table must have a schema name in order to have an audit table created"
-        )
 
     audit_table_naming_convention = parent.naming_convention.get(
         "audit.table", DEFAULT_AUDIT_TABLE_NAMING_CONVENTION
@@ -37,15 +72,15 @@ def create_audit_table(target, parent):
 
     audit_table_name = audit_table_naming_convention % {
         "table_name": target.name,
-        "schema": audit_spec["schema"],
+        "schema": audit_spec["schema"] or "public",
     }
     audit_function_name = audit_function_naming_convention % {
         "table_name": target.name,
-        "schema": audit_spec["schema"],
+        "schema": audit_spec["schema"] or "public",
     }
     audit_trigger_name = audit_trigger_naming_convention % {
         "table_name": target.name,
-        "schema": audit_spec["schema"],
+        "schema": audit_spec["schema"] or "public",
     }
 
     columns = [
@@ -62,11 +97,12 @@ def create_audit_table(target, parent):
         target.metadata,
         Column("audit_operation", String(1), nullable=False),
         Column("audit_operation_timestamp", DateTime, nullable=False),
+        Column("audit_current_user", String(64), nullable=False),
         *column_elements,
         schema=audit_spec["schema"]
     )
 
-    audit_table.info["audit.create_ddl"] = get_create_trigger_ddl(
+    target.info["audit.create_ddl"] = get_create_trigger_ddl(
         target.columns,
         audit_table.columns,
         audit_function_name,
@@ -76,8 +112,10 @@ def create_audit_table(target, parent):
         session_setting_columns,
     )
 
-    audit_table.info["audit.drop_ddl"] = get_drop_trigger_ddl(
+    target.info["audit.drop_ddl"] = get_drop_trigger_ddl(
         audit_function_name, audit_trigger_name, target.fullname
     )
+    audit_table.info["audit.target_table"] = target
+
     audit_table.info["audit.is_audit_table"] = True
     target.info["audit.is_audited"] = True
