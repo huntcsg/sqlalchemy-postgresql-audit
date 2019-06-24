@@ -7,7 +7,7 @@ from sqlalchemy import engine_from_config, pool
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-import app_schema
+import schema
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -17,7 +17,7 @@ config = context.config
 # This line sets up loggers basically.
 fileConfig(config.config_file_name)
 
-target_metadata = app_schema.metadata
+target_metadata = schema.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

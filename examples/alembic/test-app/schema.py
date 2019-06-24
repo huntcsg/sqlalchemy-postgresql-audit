@@ -1,5 +1,7 @@
-from sqlalchemy import Column, Integer, MetaData, String, Table, Integer
-import sqlalchemy_postgresql_audit.event_listeners.sqlalchemy
+from sqlalchemy import Column, MetaData, String, Table, Integer
+import sqlalchemy_postgresql_audit
+
+sqlalchemy_postgresql_audit.enable()
 
 metadata = MetaData()
 
@@ -17,5 +19,4 @@ t = Table(
             ],
         }
     },
-    schema="public",
 )
