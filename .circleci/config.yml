@@ -112,6 +112,16 @@ jobs:
             pip install tox
             tox -e lint
 
+  docs:
+    docker:
+      - image: python:3.6.5
+    steps:
+      - checkout
+      - run:
+          command: |
+            pip install tox
+            tox -e docs
+
   pypi:
     docker:
       - image: python:3.6.5
@@ -140,6 +150,7 @@ workflows:
             - python-3.6-test
             - python-3.7-test
       - lint
+      - docs
       - pypi:
           requires:
             - lint
