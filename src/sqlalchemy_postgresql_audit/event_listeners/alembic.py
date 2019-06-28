@@ -14,6 +14,11 @@ class ReversableExecute(ExecuteSQLOp):
 def compare_for_table(
     autogen_context, modify_table_ops, schema, tname, conn_table, metadata_table
 ):
+    # Early exit if there is no metadata table or we can't get it's info.
+    # This handles alembic version tables, but also others.
+    if metadata_table is None or not hasattr(metadata_table, "info"):
+        return
+
     if metadata_table.info.get("audit.is_audit_table"):
         # Case when the audit table is new
         if conn_table is None:
