@@ -22,7 +22,7 @@ with open('README.md', 'rb') as f:
 
 setup(
     name='sqlalchemy-postgresql-audit',
-    version='0.3.1',
+    version='0.4.0',
     description='A postgres audit table implementation that works with sqlalchemy and alembic',
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
