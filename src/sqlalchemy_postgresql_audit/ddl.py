@@ -1,3 +1,5 @@
+from sqlalchemy.dialects.postgresql.base import RESERVED_WORDS
+
 from .templates import make_audit_procedure, make_drop_audit_procedure
 
 
@@ -35,14 +37,18 @@ def get_create_trigger_ddl(
     check_settings = []
 
     for col in audit_columns.values():
+        column_name = (
+            '"{}"'.format(col.name) if col.name.lower() in RESERVED_WORDS else col.name
+        )
+
         # We need to make sure to explicitly reference all elements in the procedure
-        column_elements.append(col.name)
+        column_elements.append(column_name)
 
         # If this value is coming out of the target, then we want to explicitly reference the value
         if col.name in target_columns:
-            deletion_elements.append("OLD.{}".format(col.name))
-            updation_elements.append("NEW.{}".format(col.name))
-            insertion_elements.append("NEW.{}".format(col.name))
+            deletion_elements.append("OLD.{}".format(column_name))
+            updation_elements.append("NEW.{}".format(column_name))
+            insertion_elements.append("NEW.{}".format(column_name))
 
         # If it is not, it is either a default "audit_*" column
         # or it is one of our session settings values
