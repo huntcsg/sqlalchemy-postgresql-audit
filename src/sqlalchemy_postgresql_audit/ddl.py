@@ -38,7 +38,12 @@ def get_create_trigger_ddl(
 
     for col in audit_columns.values():
         column_name = (
-            '"{}"'.format(col.name) if col.name.lower() in RESERVED_WORDS else col.name
+            '"{}"'.format(col.name) 
+            if (
+                col.name.lower() in RESERVED_WORDS 
+                OR col.name.lower() != col.name
+            )
+            else col.name
         )
 
         # We need to make sure to explicitly reference all elements in the procedure
