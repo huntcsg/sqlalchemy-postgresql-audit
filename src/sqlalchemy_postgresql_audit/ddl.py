@@ -41,7 +41,7 @@ def get_create_trigger_ddl(
             '"{}"'.format(col.name) 
             if (
                 col.name.lower() in RESERVED_WORDS 
-                OR col.name.lower() != col.name
+                or col.name.lower() != col.name
             )
             else col.name
         )
