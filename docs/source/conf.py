@@ -22,7 +22,7 @@ copyright = '2019, Hunter Senft-Grupp'
 author = 'Hunter Senft-Grupp'
 
 # The full version, including alpha/beta/rc tags
-release = '0.5.1'
+release = '0.5.2'
 
 
 # -- General configuration ---------------------------------------------------
