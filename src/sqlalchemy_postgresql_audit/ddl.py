@@ -38,11 +38,8 @@ def get_create_trigger_ddl(
 
     for col in audit_columns.values():
         column_name = (
-            '"{}"'.format(col.name) 
-            if (
-                col.name.lower() in RESERVED_WORDS 
-                or col.name.lower() != col.name
-            )
+            '"{}"'.format(col.name)
+            if (col.name.lower() in RESERVED_WORDS or col.name.lower() != col.name)
             else col.name
         )
 
