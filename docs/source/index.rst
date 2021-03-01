@@ -10,6 +10,7 @@ SQLAlchemy Postgresql Audit
    example
    alembic-integration
    naming-conventions
+   session-settings
    contributing
    roadmap
    contributors
