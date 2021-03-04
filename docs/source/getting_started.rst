@@ -51,6 +51,6 @@ Getting Started
 
     .. code-block:: python
 
-        from sqlalchemy_postgresql_audit install_audit_triggers
+        from sqlalchemy_postgresql_audit import install_audit_triggers
 
         install_audit_triggers(metadata, engine)
