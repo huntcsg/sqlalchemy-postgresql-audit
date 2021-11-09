@@ -5,8 +5,12 @@ __all__ = [
     "enable",
     "install_audit_triggers",
     "uninstall_audit_triggers",
+    "audit_model",
+    "create_audit_model",
+    "create_audit_table",
 ]
 
-from .session import set_session_vars
-from .plugin import enable
+from .declarative import audit_model, create_audit_model, create_audit_table
 from .ddl import install_audit_triggers, uninstall_audit_triggers
+from .plugin import enable
+from .session import set_session_vars

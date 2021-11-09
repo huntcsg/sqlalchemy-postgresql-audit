@@ -18,7 +18,12 @@ from sqlalchemy_postgresql_audit.dialect import (
 )
 
 
-def create_audit_table(target, parent):
+def create_audit_table(
+    target,
+    parent,
+    primary_key=None,
+    ignore_columns=(),
+):
     """Create an audit table and generate procedure/trigger DDL.
 
     Naming conventions can be defined for a few of the named elements:
@@ -83,23 +88,32 @@ def create_audit_table(target, parent):
         "schema": audit_spec["schema"] or "public",
     }
 
-    columns = [
-        Column(col.name, col.type, nullable=True) for col in target.columns.values()
-    ]
+    column_elements = []
+    if primary_key is not None:
+        column_elements.append(primary_key)
+
+    column_elements.extend(
+        [
+            Column("audit_operation", String(1), nullable=False),
+            Column("audit_operation_timestamp", DateTime, nullable=False),
+            Column("audit_current_user", String(64), nullable=False),
+        ]
+    )
+
     session_setting_columns = [col.copy() for col in audit_spec["session_settings"]]
     for col in session_setting_columns:
         col.name = "audit_{}".format(col.name)
+    column_elements.extend(session_setting_columns)
 
-    column_elements = session_setting_columns + columns
+    table_columns = [
+        Column(col.name, col.type, nullable=True)
+        for col in target.columns.values()
+        if col.name not in ignore_columns
+    ]
+    column_elements.extend(table_columns)
 
     audit_table = Table(
-        audit_table_name,
-        target.metadata,
-        Column("audit_operation", String(1), nullable=False),
-        Column("audit_operation_timestamp", DateTime, nullable=False),
-        Column("audit_current_user", String(64), nullable=False),
-        *column_elements,
-        schema=audit_spec["schema"]
+        audit_table_name, target.metadata, *column_elements, schema=audit_spec["schema"]
     )
 
     target.info["audit.create_ddl"] = get_create_trigger_ddl(
@@ -119,3 +133,4 @@ def create_audit_table(target, parent):
 
     audit_table.info["audit.is_audit_table"] = True
     target.info["audit.is_audited"] = True
+    return audit_table
