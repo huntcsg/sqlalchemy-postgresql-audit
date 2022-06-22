@@ -24,9 +24,7 @@ def get_create_trigger_ddl(
     session_settings = session_settings or []
 
     deletion_elements = ["'D'", "now()", "current_user"]
-
     updation_elements = ["'U'", "now()", "current_user"]
-
     insertion_elements = ["'I'", "now()", "current_user"]
 
     setting_map = {
@@ -43,18 +41,24 @@ def get_create_trigger_ddl(
             else col.name
         )
 
-        # We need to make sure to explicitly reference all elements in the procedure
-        column_elements.append(column_name)
-
         # If this value is coming out of the target, then we want to explicitly reference the value
-        if col.name in target_columns:
+        if col.name == "audit_pk":
+            continue
+
+        elif col.name in target_columns:
             deletion_elements.append("OLD.{}".format(column_name))
             updation_elements.append("NEW.{}".format(column_name))
             insertion_elements.append("NEW.{}".format(column_name))
 
+            # We need to make sure to explicitly reference all elements in the procedure
+            column_elements.append(column_name)
+
         # If it is not, it is either a default "audit_*" column
         # or it is one of our session settings values
         else:
+            # We need to make sure to explicitly reference all elements in the procedure
+            column_elements.append(column_name)
+
             if col.name in (
                 "audit_operation",
                 "audit_operation_timestamp",

@@ -1,7 +1,6 @@
 import threading
 
-from sqlalchemy import Table
-from sqlalchemy.events import event
+from sqlalchemy import Table, event
 
 _event_listeners_enabled = False
 
@@ -17,19 +16,18 @@ def enable_event_listeners():
 
 
 def _enable_sqlalchemy_event_listeners():
-    from sqlalchemy_postgresql_audit.event_listeners.sqlalchemy import (
-        create_audit_table,
-    )
+    from sqlalchemy_postgresql_audit.event_listeners.sqlalchemy import \
+        create_audit_table
 
     event.listens_for(Table, "after_parent_attach")(create_audit_table)
 
 
 def _enable_alembic_event_listeners():
     try:
-        from sqlalchemy_postgresql_audit.event_listeners.alembic import (
-            compare_for_table,
-        )
         from alembic.autogenerate.compare import comparators
+
+        from sqlalchemy_postgresql_audit.event_listeners.alembic import \
+            compare_for_table
 
         comparators.dispatch_for("table")(compare_for_table)
     except ImportError:
